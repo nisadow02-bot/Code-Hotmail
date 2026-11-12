@@ -76,7 +76,7 @@
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h3 class="text-xl font-bold text-slate-900">📦 ออเดอร์ที่ส่งถึงคุณ</h3>
-                        <p class="text-sm text-slate-500">รายการโค้ดเมลทั้งหมดที่แอดมินส่งให้คุณ</p>
+                        <p class="text-sm text-slate-500">รายการโค้ดเมลทั้งหมดที่แอดมินส่งให้คุณ (แยกกล่องเพื่อให้กดคัดลอกง่าย)</p>
                     </div>
                     <div class="w-full md:w-72">
                         <input type="text" id="customerSearchInput" oninput="renderCustomerOrders()" placeholder="🔍 ค้นหาเลขออเดอร์ หรืออีเมล..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
@@ -278,7 +278,7 @@
                 text.textContent = "เชื่อมต่อออนไลน์แล้ว (ซิงก์ข้ามเครื่อง)";
             } else {
                 dot.className = "w-2 h-2 rounded-full bg-red-500";
-                text.textContent = "โหมดออฟไลน์ (เก็บบนเครื่องนี้)";
+                text.textContent = "โหมดออฟไลน์ (เก็บบบนเครื่องนี้)";
             }
         }
 
@@ -464,15 +464,25 @@
                         <span class="text-xs text-slate-400">${order.createdAt}</span>
                     </div>
 
-                    <div class="space-y-2">
-                        <textarea readonly rows="4" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-700 focus:outline-none">${order.codes.join('\n')}</textarea>
+                    <!-- Individual Code Boxes for easy copy -->
+                    <div class="space-y-3">
+                        ${order.codes.map((codeItem, index) => `
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <div class="flex-1 font-mono text-xs text-slate-700 break-all select-all">
+                                    <span class="text-slate-400 font-bold mr-2">#${index + 1}</span>${codeItem}
+                                </div>
+                                <button type="button" onclick="copyText('${encodeURIComponent(codeItem)}')" class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg text-xs transition-all shrink-0">
+                                    📋 คัดลอกโค้ดนี้
+                                </button>
+                            </div>
+                        `).join('')}
                     </div>
 
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="copyText('${encodeURIComponent(order.codes.join('\n'))}')" class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-xl text-xs transition-all shadow-sm">
-                            📋 คัดลอกโค้ดทั้งหมด
+                    <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                        <button onclick="copyText('${encodeURIComponent(order.codes.join('\n'))}')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-all shadow-sm">
+                            📋 คัดลอกทั้งหมดในออเดอร์นี้
                         </button>
-                        <button onclick="copyEmailsOnly('${encodeURIComponent(JSON.stringify(order.codes))}')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-all">
+                        <button onclick="copyEmailsOnly('${encodeURIComponent(JSON.stringify(order.codes))}')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-all">
                             📧 คัดลอกเฉพาะ Email
                         </button>
                     </div>
