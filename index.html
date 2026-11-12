@@ -26,10 +26,10 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
 </div>
 <!-- Tab Switcher -->
 <div class="flex bg-slate-100 p-1 rounded-xl">
-<button onclick="switchTab('customer')" id="tabBtnCustomer" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm">
+<button type="button" onclick="switchTab('customer')" id="tabBtnCustomer" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm cursor-pointer">
 👤 หน้าลูกค้า (รับโค้ด)
 </button>
-<button onclick="switchTab('admin')" id="tabBtnAdmin" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">
+<button type="button" onclick="switchTab('admin')" id="tabBtnAdmin" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
 👑 แอดมิน (จัดการโค้ด)
 </button>
 </div>
@@ -47,7 +47,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
 <label class="block text-xs font-semibold text-pink-100">ชื่อของคุณ (สำหรับรับโค้ด):</label>
 <div class="flex gap-2">
 <input type="text" id="customerNameInput" placeholder="เช่น Somchai, Aum..." class="flex-1 px-4 py-3 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-white">
-<button onclick="customerLogin()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-sm transition-all shadow-md">
+<button type="button" onclick="customerLogin()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-sm transition-all shadow-md cursor-pointer">
 เข้าสู่ระบบ
 </button>
 </div>
@@ -57,7 +57,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
 <p class="text-xs text-pink-200">กำลังใช้งานในนาม:</p>
 <h3 id="currentCustomerNameDisplay" class="text-lg font-bold">---</h3>
 </div>
-<button onclick="customerLogout()" class="px-3 py-1.5 bg-white/25 hover:bg-white/35 rounded-lg text-xs font-semibold transition-all">
+<button type="button" onclick="customerLogout()" class="px-3 py-1.5 bg-white/25 hover:bg-white/35 rounded-lg text-xs font-semibold transition-all cursor-pointer">
 เปลี่ยนชื่อ
 </button>
 </div>
@@ -110,7 +110,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
 <h3 class="font-bold text-slate-900 text-lg">👥 รายชื่อลูกค้าที่เข้าระบบ</h3>
 <p class="text-xs text-slate-500">คลิกที่ชื่อลูกค้าเพื่อเลือกส่งโค้ดให้ลูกค้ารายนั้นทันที</p>
 </div>
-<button onclick="addNewCustomerPrompt()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition-all">
+<button type="button" onclick="addNewCustomerPrompt()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition-all cursor-pointer">
 + เพิ่มรายชื่อลูกค้าเอง
 </button>
 </div>
@@ -123,7 +123,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
 <h3 class="font-bold text-slate-900 text-lg">📥 นำเข้าและส่งโค้ดจำนวนมาก (Bulk Import)</h3>
 <p class="text-xs text-slate-500">วางโค้ดเมลในช่องด้านล่าง (1 บรรทัด = 1 โค้ด)</p>
 </div>
-<button onclick="loadSampleCode()" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-600 font-semibold rounded-lg text-xs transition-all">
+<button type="button" onclick="loadSampleCode()" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-600 font-semibold rounded-lg text-xs transition-all cursor-pointer">
 + ใส่โค้ดตัวอย่าง
 </button>
 </div>
@@ -145,7 +145,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
 <option value="multiple">แยก 1 โค้ด = 1 ออเดอร์</option>
 </select>
 </div>
-<button onclick="processBulkImport()" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md shadow-pink-500/20">
+<button type="button" onclick="processBulkImport()" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md shadow-pink-500/20 cursor-pointer">
 บันทึกและส่งโค้ด
 </button>
 </div>
@@ -186,7 +186,7 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; }
 <h3 id="modalTitle" class="text-lg font-bold text-slate-900">แจ้งเตือน</h3>
 <p id="modalMessage" class="text-sm text-slate-600 leading-relaxed">ข้อความแจ้งเตือน...</p>
 <div class="flex justify-end gap-2 pt-2">
-<button onclick="closeModal()" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-sm transition-all">
+<button type="button" onclick="closeModal()" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-sm transition-all cursor-pointer">
 ตกลง
 </button>
 </div>
@@ -313,19 +313,21 @@ const customerView = document.getElementById('customerView');
 const adminView = document.getElementById('adminView');
 const tabBtnCustomer = document.getElementById('tabBtnCustomer');
 const tabBtnAdmin = document.getElementById('tabBtnAdmin');
+if (!customerView || !adminView || !tabBtnCustomer || !tabBtnAdmin) return;
 if (tab === 'customer') {
 customerView.classList.remove('hidden');
 adminView.classList.add('hidden');
-tabBtnCustomer.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm";
-tabBtnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900";
+tabBtnCustomer.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm cursor-pointer";
+tabBtnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer";
 } else {
 adminView.classList.remove('hidden');
 customerView.classList.add('hidden');
-tabBtnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm";
-tabBtnCustomer.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900";
+tabBtnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm cursor-pointer";
+tabBtnCustomer.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 cursor-pointer";
 renderAdminStats();
 }
 }
+window.switchTab = switchTab;
 function customerLogin() {
 const name = document.getElementById('customerNameInput').value.trim();
 if (!name) { showModal("กรุณากรอกชื่อของคุณก่อนเข้าสู่ระบบ"); return; }
@@ -339,12 +341,14 @@ renderCustomerState();
 renderCustomerOrders();
 renderAdminCustomers();
 }
+window.customerLogin = customerLogin;
 function customerLogout() {
 window.appData.currentCustomer = '';
 localStorage.removeItem('mumu_current_customer');
 renderCustomerState();
 renderCustomerOrders();
 }
+window.customerLogout = customerLogout;
 function renderCustomerState() {
 const loginBox = document.getElementById('customerLoginBox');
 const welcomeBox = document.getElementById('customerWelcomeBox');
@@ -378,22 +382,23 @@ container.innerHTML = filtered.map(order => `
 <span class="text-xs font-bold px-2.5 py-1 bg-pink-50 text-pink-600 rounded-lg">￼
 ￼
 ￼
-<span class="text-xs text-slate-400">{order.createdAt}</span>
+￼{order.createdAt}</span>
 </div>
 <div class="space-y-2">
 <textarea readonly rows="4" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-700 focus:outline-none">${order.codes.join('\n')}</textarea>
 </div>
 <div class="flex flex-wrap gap-2 pt-1">
-<button onclick="copyText('${encodeURIComponent(order.codes.join('\n'))}')" class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-xl text-xs transition-all shadow-sm">
+<button type="button" onclick="copyText('${encodeURIComponent(order.codes.join('\n'))}')" class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-xl text-xs transition-all shadow-sm cursor-pointer">
 📋 คัดลอกโค้ดทั้งหมด
 </button>
-<button onclick="copyEmailsOnly('${encodeURIComponent(JSON.stringify(order.codes))}')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-all">
+<button type="button" onclick="copyEmailsOnly('${encodeURIComponent(JSON.stringify(order.codes))}')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-all cursor-pointer">
 📧 คัดลอกเฉพาะ Email
 </button>
 </div>
 </div>
 `).join('');
 }
+window.renderCustomerOrders = renderCustomerOrders;
 function renderAdminStats() {
 document.getElementById('statTotalOrders').textContent = window.appData.orders.length;
 const totalCodes = window.appData.orders.reduce((sum, o) => sum + o.codes.length, 0);
@@ -406,7 +411,7 @@ const selectDropdown = document.getElementById('adminTargetCustomer');
 if (window.appData.customers.length === 0) {
 chipsContainer.innerHTML = ⁠<p class="text-xs text-slate-400">ยังไม่มีรายชื่อลูกค้าในระบบ (รายชื่อจะปรากฏอัตโนมัติเมื่อลูกค้าเข้าสู่ระบบ)</p>⁠;
 } else {
-chipsContainer.innerHTML = window.appData.customers.map(cust => ⁠<button onclick="selectCustomerForImport('${cust}')" class="px-3 py-1.5 bg-slate-100 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 border border-slate-200 rounded-xl text-xs font-semibold transition-all"> 👤 ${cust} </button>⁠).join('');
+chipsContainer.innerHTML = window.appData.customers.map(cust => ⁠<button type="button" onclick="selectCustomerForImport('${cust}')" class="px-3 py-1.5 bg-slate-100 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 border border-slate-200 rounded-xl text-xs font-semibold transition-all cursor-pointer"> 👤 ${cust} </button>⁠).join('');
 }
 selectDropdown.innerHTML = ⁠<option value="">-- ลูกค้าทั่วไป (ทุกคนค้นหาจากเลขออเดอร์ได้) --</option>⁠ +
 window.appData.customers.map(cust => ⁠<option value="${cust}">ส่งให้คุณ: ${cust}</option>⁠).join('');
@@ -415,6 +420,7 @@ function selectCustomerForImport(name) {
 document.getElementById('adminTargetCustomer').value = name;
 showModal(⁠เลือกส่งโค้ดให้ลูกค้า "${name}" เรียบร้อยแล้ว⁠);
 }
+window.selectCustomerForImport = selectCustomerForImport;
 function addNewCustomerPrompt() {
 const name = prompt("กรอกชื่อลูกค้าใหม่:");
 if (name && name.trim()) {
@@ -427,10 +433,12 @@ renderAdminCustomers();
 }
 }
 }
+window.addNewCustomerPrompt = addNewCustomerPrompt;
 function loadSampleCode() {
 document.getElementById('bulkCodeInput').value =
 ⁠RosalesWeinberg5704@hotmail.com|fhamup7558|M.C549_BAY.0.U.MsaArtifacts.-Csc9GTmfQeP0yzLRc6GWZyuZ3SQv2Xl7hmZyHcxyLQu8gPFRa8!6SJBGYYaQJAlJ6jDeqFUB0eO3dVQZnKagovyU*1DRuTV6AuBdtZlEqhsfRf0lMLerS3Z*NXBwgYoJs*MFOMjPB4fUeTUSY0DARKGvwrfw!LvVwaLrKxM0*xSEvJAOUpckD*R!qEVQm3J8UykZyWMf0IOb4I9FTZKqS0GGuCHB3JBGbBrsksUINyvq1Fl781aOEDoGC*G75nkHNsRzt*XjLXguEwGl9iYkJeLBp8swC02FVtbQbk9gF31EFhmbHWxEnYuKvaNeby6potee6vn*VEUUDmX3ESL*mXc4HYXUoKix9ttd1TmQ8Q1nzINbuOhD!IJ1*nTMHIqHTQP5gASCx37Wx7ZCACJ8dCZMCdOHm58cCYdVxYj*TohOiFZwVBZGABoADdKMW4BZUZ9dLBbz6kL8iWPe4C5xM3s$|9e5f94bc-e8a4-4e73-b8be-63364c29d753 testmail02@hotmail.com|password123|TokenSampleXYZ999|uuid-sample-2⁠;
 }
+window.loadSampleCode = loadSampleCode;
 function generateOrderNumber() {
 const count = window.appData.orders.length + 1;
 return ⁠ORD-${String(count).padStart(4, '0')}⁠;
@@ -459,6 +467,7 @@ document.getElementById('bulkCodeInput').value = '';
 refreshUI();
 showModal(⁠นำเข้าและสร้างออเดอร์สำเร็จ (${lines.length} โค้ด)⁠);
 }
+window.processBulkImport = processBulkImport;
 function renderAdminOrders() {
 const tbody = document.getElementById('adminOrdersTableBody');
 const search = document.getElementById('adminSearchInput').value.toLowerCase().trim();
@@ -472,8 +481,9 @@ if (filtered.length === 0) {
 tbody.innerHTML = ⁠<tr><td colspan="6" class="p-6 text-center text-slate-400">ไม่พบรายการออเดอร์</td></tr>⁠;
 return;
 }
-tbody.innerHTML = filtered.map(order => ⁠<tr class="hover:bg-slate-50/80 transition-all"> <td class="p-3 font-bold text-pink-600"> <button onclick="copyText('${encodeURIComponent(order.id)}')" class="hover:underline" title="คลิกเพื่อคัดลอกเลขออเดอร์"> ${order.id} </button> </td> <td class="p-3 font-medium text-slate-700">${order.targetCustomer || '<span class="text-slate-400 font-normal">ทั่วไป</span>'}</td> <td class="p-3"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-semibold">${order.codes.length} โค้ด</span></td> <td class="p-3 font-mono text-xs text-slate-500 truncate max-w-xs">${order.codes[0]}</td> <td class="p-3 text-xs text-slate-400">${order.createdAt}</td> <td class="p-3 text-right"> <button onclick="deleteOrder('${order.id}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-all"> ลบ </button> </td> </tr>⁠).join('');
+tbody.innerHTML = filtered.map(order => ⁠<tr class="hover:bg-slate-50/80 transition-all"> <td class="p-3 font-bold text-pink-600"> <button type="button" onclick="copyText('${encodeURIComponent(order.id)}')" class="hover:underline cursor-pointer" title="คลิกเพื่อคัดลอกเลขออเดอร์"> ${order.id} </button> </td> <td class="p-3 font-medium text-slate-700">${order.targetCustomer || '<span class="text-slate-400 font-normal">ทั่วไป</span>'}</td> <td class="p-3"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-semibold">${order.codes.length} โค้ด</span></td> <td class="p-3 font-mono text-xs text-slate-500 truncate max-w-xs">${order.codes[0]}</td> <td class="p-3 text-xs text-slate-400">${order.createdAt}</td> <td class="p-3 text-right"> <button type="button" onclick="deleteOrder('${order.id}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-all cursor-pointer"> ลบ </button> </td> </tr>⁠).join('');
 }
+window.renderAdminOrders = renderAdminOrders;
 function deleteOrder(orderId) {
 if (confirm("คุณต้องการลบออเดอร์นี้ใช่หรือไม่?")) {
 window.appData.orders = window.appData.orders.filter(o => o.id !== orderId);
@@ -482,6 +492,7 @@ saveToLocal();
 refreshUI();
 }
 }
+window.deleteOrder = deleteOrder;
 function copyText(encodedText) {
 const text = decodeURIComponent(encodedText);
 const textarea = document.createElement('textarea');
@@ -496,18 +507,22 @@ showModal("ไม่สามารถคัดลอกได้");
 }
 document.body.removeChild(textarea);
 }
+window.copyText = copyText;
 function copyEmailsOnly(encodedJson) {
 const codes = JSON.parse(decodeURIComponent(encodedJson));
 const emails = codes.map(c => c.split('|')[0]).filter(Boolean).join('\n');
 copyText(encodeURIComponent(emails));
 }
+window.copyEmailsOnly = copyEmailsOnly;
 function showModal(msg) {
 document.getElementById('modalMessage').textContent = msg;
 document.getElementById('customModal').classList.remove('hidden');
 }
+window.showModal = showModal;
 function closeModal() {
 document.getElementById('customModal').classList.add('hidden');
 }
+window.closeModal = closeModal;
 </script>
 </body>
 </html>
