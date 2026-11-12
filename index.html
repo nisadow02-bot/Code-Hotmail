@@ -1,416 +1,670 @@
-<!-- ... existing code ... -->
-            <!-- Mode Switcher & Current Customer Indicator -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button id="cloudConfigBtn" onclick="openCloudConfigModal()" class="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition" title="ตั้งค่าฐานข้อมูลออนไลน์สำหรับ GitHub Pages">
-                    <span>☁️</span>
-                    <span class="hidden md:inline">ตั้งค่าออนไลน์</span>
-                </button>
-                <div id="loggedInUserBadge" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
-                    <span>👤</span>
-                    <span id="headerCustomerName"></span>
-                </div>
-<!-- ... existing code ... -->
-            <div class="flex justify-end gap-3">
-                <button id="confirmCancelBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">ยกเลิก</button>
-                <button id="confirmOkBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition">ยืนยัน</button>
-            </div>
-        </div>
-    </div>
+        <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mumu Hotmail - ระบบจัดการและส่งมอบโค้ดเมล</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Cloud Config Modal for External Hosting (GitHub Pages) -->
-    <div id="cloudConfigModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 transform transition-all space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <span>☁️</span> ตั้งค่าฐานข้อมูลออนไลน์ (สำหรับ GitHub Pages)
-                </h3>
-                <button onclick="closeCloudConfigModal()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed">
-                เมื่อนำเว็บไปเปิดบน <strong>GitHub Pages</strong> หากต้องการให้แอดมินและลูกค้าซิงก์ข้อมูลข้ามเครื่องกันได้ ให้นำ <strong>Firebase Config (JSON)</strong> จากโปรเจกต์ Firebase ฟรีของคุณมาวางด้านล่าง (เปิดใช้งาน Anonymous Auth และ Firestore Database)
-            </p>
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">วาง Firebase Config JSON:</label>
-                <textarea id="customFirebaseConfigInput" rows="5" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "...", "storageBucket": "...", "messagingSenderId": "...", "appId": "..."}'
-                    class="w-full p-3 rounded-xl border border-slate-300 font-mono text-xs bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
-            </div>
-            <div class="flex flex-wrap justify-between items-center gap-2 pt-2">
-                <button type="button" onclick="resetCustomFirebaseConfig()" class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition">
-                    ล้างการตั้งค่า (ใช้โหมดออฟไลน์)
-                </button>
-                <div class="flex gap-2">
-                    <button type="button" onclick="closeCloudConfigModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">ปิด</button>
-                    <button type="button" onclick="saveCustomFirebaseConfig()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition">บันทึกและเชื่อมต่อ</button>
+    <!-- Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-pink-500/20">M</div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 leading-tight">Mumu Hotmail</h1>
+                    <p class="text-xs text-slate-500 flex items-center gap-1.5">
+                        <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span id="syncStatusText">กำลังเชื่อมต่อระบบออนไลน์...</span>
+                    </p>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Top Navigation -->
-<!-- ... existing code ... -->
-                    <button type="button" onclick="openAddCustomerPrompt()" class="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold transition">
+            <!-- Tab Switcher -->
+            <div class="flex bg-slate-100 p-1 rounded-xl">
+                <button onclick="switchTab('customer')" id="tabBtnCustomer" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm">
+                    👤 หน้าลูกค้า (รับโค้ด)
+                </button>
+                <button onclick="switchTab('admin')" id="tabBtnAdmin" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">
+                    👑 แอดมิน (จัดการโค้ด)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+
+        <!-- ==================== CUSTOMER VIEW ==================== -->
+        <div id="customerView" class="space-y-6">
+            <!-- Customer Login / Status Card -->
+            <div class="bg-gradient-to-r from-pink-500 to-rose-600 rounded-2xl p-6 text-white shadow-xl shadow-pink-500/10">
+                <div class="max-w-xl">
+                    <h2 class="text-2xl font-bold mb-2">ยินดีต้อนรับสู่ Mumu Hotmail</h2>
+                    <p class="text-pink-100 text-sm mb-6">กรอกชื่อของคุณเพื่อเข้าสู่ระบบและรับโค้ดเมลที่แอดมินส่งให้ได้ทันที</p>
+                    
+                    <div id="customerLoginBox" class="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/25 space-y-3">
+                        <label class="block text-xs font-semibold text-pink-100">ชื่อของคุณ (สำหรับรับโค้ด):</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="customerNameInput" placeholder="เช่น Somchai, Aum..." class="flex-1 px-4 py-3 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-white">
+                            <button onclick="customerLogin()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-sm transition-all shadow-md">
+                                เข้าสู่ระบบ
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="customerWelcomeBox" class="hidden flex items-center justify-between bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/25">
+                        <div>
+                            <p class="text-xs text-pink-200">กำลังใช้งานในนาม:</p>
+                            <h3 id="currentCustomerNameDisplay" class="text-lg font-bold">---</h3>
+                        </div>
+                        <button onclick="customerLogout()" class="px-3 py-1.5 bg-white/25 hover:bg-white/35 rounded-lg text-xs font-semibold transition-all">
+                            เปลี่ยนชื่อ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Orders Section -->
+            <div class="space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">📦 ออเดอร์ที่ส่งถึงคุณ</h3>
+                        <p class="text-sm text-slate-500">รายการโค้ดเมลทั้งหมดที่แอดมินส่งให้คุณ</p>
+                    </div>
+                    <div class="w-full md:w-72">
+                        <input type="text" id="customerSearchInput" oninput="renderCustomerOrders()" placeholder="🔍 ค้นหาเลขออเดอร์ หรืออีเมล..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    </div>
+                </div>
+
+                <div id="customerOrdersList" class="grid grid-cols-1 gap-4">
+                    <!-- Dynamic Orders for Customer -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ADMIN VIEW ==================== -->
+        <div id="adminView" class="space-y-6 hidden">
+            <!-- Admin Stats Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-lg">📦</div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">ออเดอร์ทั้งหมด</p>
+                        <h4 id="statTotalOrders" class="text-2xl font-bold text-slate-900">0</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">📧</div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">โค้ดเมลทั้งหมด</p>
+                        <h4 id="statTotalCodes" class="text-2xl font-bold text-slate-900">0</h4>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">👥</div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">รายชื่อลูกค้า</p>
+                        <h4 id="statTotalCustomers" class="text-2xl font-bold text-slate-900">0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Directory Management -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">👥 รายชื่อลูกค้าที่เข้าระบบ</h3>
+                        <p class="text-xs text-slate-500">คลิกที่ชื่อลูกค้าเพื่อเลือกส่งโค้ดให้ลูกค้ารายนั้นทันที</p>
+                    </div>
+                    <button onclick="addNewCustomerPrompt()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition-all">
                         + เพิ่มรายชื่อลูกค้าเอง
                     </button>
-                    <button type="button" onclick="openCloudConfigModal()" class="sm:hidden self-start px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
-                        ☁️ ตั้งค่าออนไลน์ข้ามเครื่อง
+                </div>
+                <div id="adminCustomerChips" class="flex flex-wrap gap-2">
+                    <!-- Customer chips rendered here -->
+                </div>
+            </div>
+
+            <!-- Bulk Import Card -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">📥 นำเข้าและส่งโค้ดจำนวนมาก (Bulk Import)</h3>
+                        <p class="text-xs text-slate-500">วางโค้ดเมลในช่องด้านล่าง (1 บรรทัด = 1 โค้ด)</p>
+                    </div>
+                    <button onclick="loadSampleCode()" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-600 font-semibold rounded-lg text-xs transition-all">
+                        + ใส่โค้ดตัวอย่าง
                     </button>
                 </div>
-<!-- ... existing code ... -->
-        // ==================== CLOUD & FALLBACK DATABASE SETUP ====================
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">🎯 ส่งโค้ดให้ลูกค้า:</label>
+                        <select id="adminTargetCustomer" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 font-medium">
+                            <option value="">-- ลูกค้าทั่วไป (ทุกคนค้นหาจากเลขออเดอร์ได้) --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <textarea id="bulkCodeInput" rows="6" placeholder="RosalesWeinberg5704@hotmail.com|fhamup7558|M.C549_...|uuid" class="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"></textarea>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <label class="text-xs font-semibold text-slate-600">รูปแบบการสร้างออเดอร์:</label>
+                            <select id="importMode" class="px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                <option value="single">รวมทั้งหมดเป็น 1 ออเดอร์ (รันเลขออเดอร์เดียว)</option>
+                                <option value="multiple">แยก 1 โค้ด = 1 ออเดอร์</option>
+                            </select>
+                        </div>
+                        <button onclick="processBulkImport()" class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md shadow-pink-500/20">
+                            บันทึกและส่งโค้ด
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Orders List -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">📋 รายการออเดอร์ทั้งหมด</h3>
+                        <p class="text-xs text-slate-500">คลิกที่เลขออเดอร์เพื่อคัดลอก หรือตรวจสอบรายชื่อผู้รับ</p>
+                    </div>
+                    <div class="w-full md:w-80">
+                        <input type="text" id="adminSearchInput" oninput="renderAdminOrders()" placeholder="🔍 กรองเลขออเดอร์, ชื่อลูกค้า, อีเมล..." class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3 font-semibold">เลขออเดอร์</th>
+                                <th class="p-3 font-semibold">ลูกค้าผู้รับ</th>
+                                <th class="p-3 font-semibold">จำนวนโค้ด</th>
+                                <th class="p-3 font-semibold">ตัวอย่างข้อมูล</th>
+                                <th class="p-3 font-semibold">วันที่สร้าง</th>
+                                <th class="p-3 font-semibold text-right">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersTableBody" class="divide-y divide-slate-100">
+                            <!-- Orders rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Modal / Notification Box -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 id="modalTitle" class="text-lg font-bold text-slate-900">แจ้งเตือน</h3>
+            <p id="modalMessage" class="text-sm text-slate-600 leading-relaxed">ข้อความแจ้งเตือน...</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal()" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-sm transition-all">
+                    ตกลง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase variables
+        window.firebaseApp = null;
+        window.db = null;
+        window.auth = null;
+        window.currentUser = null;
+        window.isCloudConnected = false;
+
+        // App configuration
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'mumu-hotmail-default';
-        
-        function resolveFirebaseConfig() {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                try { return JSON.parse(__firebase_config); } catch (e) {}
-            }
-            try {
-                const saved = window.name && window.name.startsWith('MUMU_FB_CFG:') 
-                    ? window.name.replace('MUMU_FB_CFG:', '') 
-                    : null;
-                if (saved) return JSON.parse(saved);
-            } catch (e) {}
-            return null;
-        }
-
-        let firebaseConfig = resolveFirebaseConfig();
-        let isCloudMode = false;
-        let db = null;
-        let auth = null;
-        let currentUser = null;
-
-        const SAMPLE_CODE = 'RosalesWeinberg5704@hotmail.com|fhamup7558|M.C549_BAY.0.U.MsaArtifacts.-Csc9GTmfQeP0yzLRc6GWZyuZ3SQv2Xl7hmZyHcxyLQu8gPFRa8!6SJBGYYaQJAlJ6jDeqFUB0eO3dVQZnKagovyU*1DRuTV6AuBdtZlEqhsfRf0lMLerS3Z*NXBwgYoJs*MFOMjPB4fUeTUSY0DARKGvwrfw!LvVwaLrKxM0*xSEvJAOUpckD*R!qEVQm3J8UykZyWMf0IOb4I9FTZKqS0GGuCHB3JBGbBrsksUINyvq1Fl781aOEDoGC*G75nkHNsRzt*XjLXguEwGl9iYkJeLBp8swC02FVtbQbk9gF31EFhmbHWxEnYuKvaNeby6potee6vn*VEUUDmX3ESL*mXc4HYXUoKix9ttd1TmQ8Q1nzINbuOhD!IJ1*nTMHIqHTQP5gASCx37Wx7ZCACJ8dCZMCdOHm58cCYdVxYj*TohOiFZwVBZGABoADdKMW4BZUZ9dLBbz6kL8iWPe4C5xM3s$|9e5f94bc-e8a4-4e73-b8be-63364c29d753';
-
-        let appState = {
-            nextOrderNum: 1,
-            customers: [], // { id, name, joinedAt }
-            orders: []     // { id: 'ORD-0001', num: 1, customerName: '', codes: ['...'], createdAt }
+        const firebaseConfig = window.__firebase_config ? JSON.parse(window.__firebase_config) : {
+            apiKey: "AIzaSyDtPb0QTzkGTKZvJcOY1X3e0nXAmKwBQn0",
+            authDomain: "mumu-hotmail.firebaseapp.com",
+            projectId: "mumu-hotmail",
+            storageBucket: "mumu-hotmail.firebasestorage.app",
+            messagingSenderId: "660372688303",
+            appId: "1:660372688303:web:dda49b3f47ebcf5580735a",
+            measurementId: "G-6Z1NLT46D1"
         };
 
-        let currentCustomerName = '';
-        let currentPage = 1;
-        const ITEMS_PER_PAGE = 20;
-        let isInitialOrdersLoaded = false;
-
-        // ==================== INITIALIZATION ====================
-        window.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('bulkCodeInput').addEventListener('input', updateLineCount);
-            await initDatabase();
-        });
-
-        async function initDatabase() {
-            const statusDot = document.getElementById('syncStatusDot');
-            const statusText = document.getElementById('syncStatusText');
-
-            if (!firebaseConfig) {
-                // Fallback to instant in-memory mode so GitHub Pages works immediately without hanging
-                isCloudMode = false;
-                statusDot.className = 'w-2 h-2 rounded-full bg-amber-500';
-                statusText.textContent = 'โหมดใช้งานในเครื่อง (กด "ตั้งค่าออนไลน์" เพื่อซิงก์ข้ามเครื่อง)';
-                
-                if (appState.orders.length === 0) {
-                    appState.orders.push({
-                        id: 'ORD-0001',
-                        num: 1,
-                        customerName: '',
-                        codes: [SAMPLE_CODE],
-                        createdAt: new Date().toISOString()
-                    });
-                    appState.nextOrderNum = 2;
-                }
-                refreshAllViews();
-                return;
-            }
-
+        async function initFirebase() {
             try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+                window.firebaseApp = initializeApp(firebaseConfig);
+                window.db = getFirestore(window.firebaseApp);
+                window.auth = getAuth(window.firebaseApp);
 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    await signInWithCustomToken(window.auth, __initial_auth_token);
                 } else {
-                    await signInAnonymously(auth);
+                    await signInAnonymously(window.auth);
                 }
 
-                currentUser = auth.currentUser;
-                if (!currentUser) throw new Error('No authenticated user');
-
-                isCloudMode = true;
-                statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-                statusText.textContent = 'เชื่อมต่อออนไลน์แล้ว (ซิงก์ทุกเครื่องอัตโนมัติ)';
-
-                startRealtimeListeners();
-            } catch (err) {
-                console.error('Cloud init error:', err);
-                isCloudMode = false;
-                statusDot.className = 'w-2 h-2 rounded-full bg-amber-500';
-                statusText.textContent = 'โหมดใช้งานในเครื่อง (เชื่อมต่อคลาวด์ไม่สำเร็จ)';
-                refreshAllViews();
+                onAuthStateChanged(window.auth, (user) => {
+                    if (user) {
+                        window.currentUser = user;
+                        window.isCloudConnected = true;
+                        updateSyncStatus(true);
+                        startRealtimeSync();
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase connection error:", error);
+                window.isCloudConnected = false;
+                updateSyncStatus(false);
+                loadFromLocalFallback();
             }
         }
 
-        function refreshAllViews() {
-            updateCustomerUI();
-            updateAdminCustomerUI();
-            updateAdminStats();
-            renderAdminTable();
+        function updateSyncStatus(connected) {
+            const dot = document.getElementById('syncStatusDot');
+            const text = document.getElementById('syncStatusText');
+            if (connected) {
+                dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+                text.textContent = "เชื่อมต่อออนไลน์แล้ว (ซิงก์ข้ามเครื่อง)";
+            } else {
+                dot.className = "w-2 h-2 rounded-full bg-red-500";
+                text.textContent = "โหมดออฟไลน์ (เก็บบนเครื่องนี้)";
+            }
         }
 
-        window.openCloudConfigModal = function() {
-            const modal = document.getElementById('cloudConfigModal');
-            const input = document.getElementById('customFirebaseConfigInput');
-            input.value = firebaseConfig ? JSON.stringify(firebaseConfig, null, 2) : '';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        };
+        // Firestore Realtime Sync
+        function startRealtimeSync() {
+            if (!window.db) return;
+            
+            // Sync Orders
+            onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'orders'), (snapshot) => {
+                const orders = [];
+                snapshot.forEach(docSnap => {
+                    orders.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                window.appData.orders = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                saveToLocal();
+                refreshUI();
+            }, (error) => {
+                console.error("Orders sync error:", error);
+            });
 
-        window.closeCloudConfigModal = function() {
-            const modal = document.getElementById('cloudConfigModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        };
+            // Sync Customers
+            onSnapshot(collection(window.db, 'artifacts', appId, 'public', 'data', 'customers'), (snapshot) => {
+                const customers = new Set(window.appData.customers);
+                snapshot.forEach(docSnap => {
+                    if (docSnap.data().name) customers.add(docSnap.data().name);
+                });
+                window.appData.customers = Array.from(customers);
+                saveToLocal();
+                refreshUI();
+            }, (error) => {
+                console.error("Customers sync error:", error);
+            });
+        }
 
-        window.saveCustomFirebaseConfig = function() {
-            const raw = document.getElementById('customFirebaseConfigInput').value.trim();
-            if (!raw) {
-                showToast('กรุณาวางโค้ด Firebase Config JSON', 'error');
-                return;
-            }
+        window.saveOrderToCloud = async function(order) {
+            if (!window.db || !window.currentUser) return;
             try {
-                // Allow pasting JS object format or strict JSON
-                const cleaned = raw.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
-                const parsed = JSON.parse(cleaned);
-                if (!parsed.apiKey || !parsed.projectId) {
-                    throw new Error('Missing apiKey or projectId');
-                }
-                window.name = 'MUMU_FB_CFG:' + JSON.stringify(parsed);
-                closeCloudConfigModal();
-                showToast('บันทึกการตั้งค่าแล้ว กำลังรีโหลดเพื่อเชื่อมต่อ...', 'success');
-                setTimeout(() => location.reload(), 800);
+                await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'orders', order.id), order);
             } catch (e) {
-                showToast('รูปแบบ Config ไม่ถูกต้อง กรุณาตรวจสอบ JSON อีกครั้ง', 'error');
+                console.error("Error saving order:", e);
             }
         };
 
-        window.resetCustomFirebaseConfig = function() {
-            window.name = '';
-            closeCloudConfigModal();
-            showToast('ล้างการตั้งค่าออนไลน์แล้ว', 'success');
-            setTimeout(() => location.reload(), 600);
+        window.deleteOrderFromCloud = async function(orderId) {
+            if (!window.db || !window.currentUser) return;
+            try {
+                await deleteDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
+            } catch (e) {
+                console.error("Error deleting order:", e);
+            }
         };
-// ... existing code ...
-        function sanitizeDocId(name) {
-            return encodeURIComponent(name.trim().toLowerCase()).replace(/\./g, '%2E');
-        }
 
-        async function registerCustomerIfNew(name) {
-            const cleanName = name.trim();
-            if (!cleanName) return;
+        window.saveCustomerToCloud = async function(custName) {
+            if (!window.db || !window.currentUser) return;
+            try {
+                const safeId = custName.replace(/[^a-zA-Z0-9_-]/g, '_');
+                await setDoc(doc(window.db, 'artifacts', appId, 'public', 'data', 'customers', safeId), { name: custName });
+            } catch (e) {
+                console.error("Error saving customer:", e);
+            }
+        };
 
-            const exists = appState.customers.some(c => c.name.toLowerCase() === cleanName.toLowerCase());
-            if (!exists) {
-                if (!isCloudMode || !currentUser || !db) {
-                    appState.customers.unshift({
-                        id: sanitizeDocId(cleanName),
-                        name: cleanName,
-                        joinedAt: new Date().toISOString()
-                    });
-                    refreshAllViews();
-                    return;
-                }
-                try {
-                    const docId = sanitizeDocId(cleanName);
-                    const customerDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', docId);
-                    await setDoc(customerDocRef, {
-                        name: cleanName,
-                        joinedAt: new Date().toISOString()
-                    });
-                } catch (e) {
-                    console.error('Error registering customer:', e);
-                }
+        window.onload = function() {
+            initFirebase();
+        };
+    </script>
+
+    <!-- Application Logic Script -->
+    <script>
+        // Local state management
+        window.appData = {
+            orders: JSON.parse(localStorage.getItem('mumu_orders') || '[]'),
+            customers: JSON.parse(localStorage.getItem('mumu_customers') || '[]'),
+            currentCustomer: localStorage.getItem('mumu_current_customer') || ''
+        };
+
+        function saveToLocal() {
+            localStorage.setItem('mumu_orders', JSON.stringify(window.appData.orders));
+            localStorage.setItem('mumu_customers', JSON.stringify(window.appData.customers));
+            if (window.appData.currentCustomer) {
+                localStorage.setItem('mumu_current_customer', window.appData.currentCustomer);
             }
         }
-// ... existing code ...
-        // ==================== UTILITIES ====================
-        function formatOrderId(num) {
-            return 'ORD-' + String(num).padStart(4, '0');
+
+        function loadFromLocalFallback() {
+            refreshUI();
         }
 
-        async function createOrderRecord(codesArray, customerName = '', explicitNum = null) {
-            const num = explicitNum !== null ? explicitNum : appState.nextOrderNum;
-            const id = formatOrderId(num);
-            const order = {
-                id: id,
-                num: num,
-                customerName: customerName ? customerName.trim() : '',
-                codes: codesArray,
-                createdAt: new Date().toISOString()
-            };
+        function refreshUI() {
+            renderCustomerState();
+            renderCustomerOrders();
+            renderAdminOrders();
+            renderAdminCustomers();
+        }
 
-            if (!isCloudMode || !currentUser || !db) {
-                appState.orders.unshift(order);
-                appState.nextOrderNum = num + 1;
-                refreshAllViews();
-                return order;
+        // Tab Switching
+        function switchTab(tab) {
+            const customerView = document.getElementById('customerView');
+            const adminView = document.getElementById('adminView');
+            const tabBtnCustomer = document.getElementById('tabBtnCustomer');
+            const tabBtnAdmin = document.getElementById('tabBtnAdmin');
+
+            if (tab === 'customer') {
+                customerView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+                tabBtnCustomer.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm";
+                tabBtnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900";
+            } else {
+                adminView.classList.remove('hidden');
+                customerView.classList.add('hidden');
+                tabBtnAdmin.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-slate-900 shadow-sm";
+                tabBtnCustomer.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900";
+                renderAdminStats();
             }
-
-            const orderDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', id);
-            await setDoc(orderDocRef, order);
-            return order;
         }
-// ... existing code ...
-        window.removeCustomerFromAdmin = function(customerName) {
-            showConfirm('ลบรายชื่อลูกค้า', `ต้องการลบรายชื่อ "${customerName}" ออกจากรายการลูกค้าใช่หรือไม่? (ออเดอร์เดิมจะยังคงอยู่)`, async () => {
-                if (!isCloudMode || !currentUser || !db) {
-                    appState.customers = appState.customers.filter(c => c.name !== customerName);
-                    refreshAllViews();
-                    showToast(`ลบรายชื่อ "${customerName}" แล้ว`, 'success');
-                    return;
-                }
-                try {
-                    const docId = sanitizeDocId(customerName);
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', docId));
-                    showToast(`ลบรายชื่อ "${customerName}" แล้ว`, 'success');
-                } catch (e) {
-                    console.error('Remove customer error:', e);
-                    showToast('เกิดข้อผิดพลาดในการลบรายชื่อ', 'error');
-                }
+
+        // Customer Auth Logic
+        function customerLogin() {
+            const name = document.getElementById('customerNameInput').value.trim();
+            if (!name) {
+                showModal("กรุณากรอกชื่อของคุณก่อนเข้าสู่ระบบ");
+                return;
+            }
+            window.appData.currentCustomer = name;
+            if (!window.appData.customers.includes(name)) {
+                window.appData.customers.push(name);
+                if (window.saveCustomerToCloud) window.saveCustomerToCloud(name);
+            }
+            saveToLocal();
+            renderCustomerState();
+            renderCustomerOrders();
+            renderAdminCustomers();
+        }
+
+        function customerLogout() {
+            window.appData.currentCustomer = '';
+            localStorage.removeItem('mumu_current_customer');
+            renderCustomerState();
+            renderCustomerOrders();
+        }
+
+        function renderCustomerState() {
+            const loginBox = document.getElementById('customerLoginBox');
+            const welcomeBox = document.getElementById('customerWelcomeBox');
+            const nameDisplay = document.getElementById('currentCustomerNameDisplay');
+
+            if (window.appData.currentCustomer) {
+                loginBox.classList.add('hidden');
+                welcomeBox.classList.remove('hidden');
+                nameDisplay.textContent = window.appData.currentCustomer;
+            } else {
+                loginBox.classList.remove('hidden');
+                welcomeBox.classList.add('hidden');
+            }
+        }
+
+        // Customer Orders Render
+        function renderCustomerOrders() {
+            const container = document.getElementById('customerOrdersList');
+            const search = document.getElementById('customerSearchInput').value.toLowerCase().trim();
+            const currentCust = window.appData.currentCustomer.toLowerCase();
+
+            // Filter orders for this customer (or all if general / searched)
+            const filtered = window.appData.orders.filter(order => {
+                const matchCust = !currentCust || (order.targetCustomer && order.targetCustomer.toLowerCase() === currentCust) || !order.targetCustomer;
+                const matchSearch = !search || order.id.toLowerCase().includes(search) || order.codes.some(c => c.toLowerCase().includes(search));
+                return matchCust && matchSearch;
             });
-        };
-// ... existing code ...
-        window.processBulkImport = async function() {
-            const textarea = document.getElementById('bulkCodeInput');
-            const lines = textarea.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
 
-            if (lines.length === 0) {
-                showToast('กรุณาวางโค้ดอย่างน้อย 1 บรรทัด', 'error');
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-2">
+                        <p class="text-slate-400 font-medium">ยังไม่มีออเดอร์โค้ดที่ส่งถึงคุณในขณะนี้</p>
+                        <p class="text-xs text-slate-400">กรุณาเข้าสู่ระบบด้วยชื่อของคุณ หรือตรวจสอบเลขออเดอร์ให้ถูกต้อง</p>
+                    </div>
+                `;
                 return;
             }
 
-            const submitBtn = document.getElementById('bulkSubmitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'กำลังบันทึก...';
+            container.innerHTML = filtered.map(order => `
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <span class="text-xs font-bold px-2.5 py-1 bg-pink-50 text-pink-600 rounded-lg">${order.id}</span>
+                            <span class="text-xs text-slate-400 ml-2">ผู้รับ: ${order.targetCustomer || 'ทั่วไป'} (${order.codes.length} โค้ด)</span>
+                        </div>
+                        <span class="text-xs text-slate-400">${order.createdAt}</span>
+                    </div>
 
-            try {
-                const mode = document.getElementById('importMode').value;
-                const targetCustomer = document.getElementById('targetCustomerSelect').value;
-                let createdCount = 0;
-                let firstId = '';
-                let lastId = '';
-                let startingNum = appState.nextOrderNum;
+                    <div class="space-y-2">
+                        <textarea readonly rows="4" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-700 focus:outline-none">${order.codes.join('\n')}</textarea>
+                    </div>
 
-                if (mode === 'single_order') {
-                    const order = await createOrderRecord(lines, targetCustomer, startingNum);
-                    createdCount = 1;
-                    firstId = order.id;
-                } else if (!isCloudMode || !currentUser || !db) {
-                    // Instant in-memory creation when running standalone on GitHub Pages without Firebase Config
-                    lines.forEach((line, idx) => {
-                        const orderNum = startingNum + idx;
-                        const id = formatOrderId(orderNum);
-                        if (idx === 0) firstId = id;
-                        lastId = id;
-                        appState.orders.unshift({
-                            id: id,
-                            num: orderNum,
-                            customerName: targetCustomer ? targetCustomer.trim() : '',
-                            codes: [line],
-                            createdAt: new Date().toISOString()
-                        });
-                    });
-                    appState.nextOrderNum = startingNum + lines.length;
-                    createdCount = lines.length;
-                    refreshAllViews();
-                } else {
-                    // Use Firestore writeBatch in chunks of 400 for fast bulk creation
-                    const CHUNK_SIZE = 400;
-                    for (let i = 0; i < lines.length; i += CHUNK_SIZE) {
-                        const batch = writeBatch(db);
-                        const chunk = lines.slice(i, i + CHUNK_SIZE);
-                        chunk.forEach((line, idxInChunk) => {
-                            const orderNum = startingNum + i + idxInChunk;
-                            const id = formatOrderId(orderNum);
-                            if (i === 0 && idxInChunk === 0) firstId = id;
-                            lastId = id;
-                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', id);
-                            batch.set(docRef, {
-                                id: id,
-                                num: orderNum,
-                                customerName: targetCustomer ? targetCustomer.trim() : '',
-                                codes: [line],
-                                createdAt: new Date().toISOString()
-                            });
-                        });
-                        await batch.commit();
-                    }
-                    createdCount = lines.length;
-                }
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button onclick="copyText('${encodeURIComponent(order.codes.join('\n'))}')" class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-xl text-xs transition-all shadow-sm">
+                            📋 คัดลอกโค้ดทั้งหมด
+                        </button>
+                        <button onclick="copyEmailsOnly('${encodeURIComponent(JSON.stringify(order.codes))}')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-all">
+                            📧 คัดลอกเฉพาะ Email
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-                textarea.value = '';
-                updateLineCount();
-                currentPage = 1;
+        // Admin Management
+        function renderAdminStats() {
+            document.getElementById('statTotalOrders').textContent = window.appData.orders.length;
+            const totalCodes = window.appData.orders.reduce((sum, o) => sum + o.codes.length, 0);
+            document.getElementById('statTotalCodes').textContent = totalCodes;
+            document.getElementById('statTotalCustomers').textContent = window.appData.customers.length;
+        }
 
-                const recipientText = targetCustomer ? ` ให้ลูกค้า "${targetCustomer}"` : '';
-                if (createdCount === 1) {
-                    showToast(`ส่งออเดอร์ ${firstId} (${lines.length} โค้ด)${recipientText} สำเร็จ!`, 'success');
-                } else {
-                    showToast(`สร้าง ${createdCount.toLocaleString()} ออเดอร์ (${firstId} ถึง ${lastId})${recipientText} สำเร็จ!`, 'success');
-                }
-            } catch (err) {
-                console.error('Bulk import error:', err);
-                showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'บันทึกและส่งโค้ด';
+        function renderAdminCustomers() {
+            const chipsContainer = document.getElementById('adminCustomerChips');
+            const selectDropdown = document.getElementById('adminTargetCustomer');
+
+            // Render chips
+            if (window.appData.customers.length === 0) {
+                chipsContainer.innerHTML = `<p class="text-xs text-slate-400">ยังไม่มีรายชื่อลูกค้าในระบบ (รายชื่อจะปรากฏอัตโนมัติเมื่อลูกค้าเข้าสู่ระบบ)</p>`;
+            } else {
+                chipsContainer.innerHTML = window.appData.customers.map(cust => `
+                    <button onclick="selectCustomerForImport('${cust}')" class="px-3 py-1.5 bg-slate-100 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 border border-slate-200 rounded-xl text-xs font-semibold transition-all">
+                        👤 ${cust}
+                    </button>
+                `).join('');
             }
-        };
-// ... existing code ...
-        window.deleteOrder = function(orderId) {
-            showConfirm('ลบออเดอร์', `ต้องการลบออเดอร์ ${orderId} ใช่หรือไม่?`, async () => {
-                if (!isCloudMode || !currentUser || !db) {
-                    appState.orders = appState.orders.filter(o => o.id !== orderId);
-                    refreshAllViews();
-                    showToast(`ลบออเดอร์ ${orderId} แล้ว`, 'success');
-                    return;
-                }
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
-                    showToast(`ลบออเดอร์ ${orderId} แล้ว`, 'success');
-                } catch (e) {
-                    console.error('Delete order error:', e);
-                    showToast('ไม่สามารถลบออเดอร์ได้', 'error');
-                }
-            });
-        };
 
-        window.confirmClearAll = function() {
-            showConfirm('ล้างข้อมูลทั้งหมด', 'ข้อมูลลูกค้า ออเดอร์ และโค้ดทั้งหมดจะถูกลบ และเลขออเดอร์จะรีเซ็ตกลับเป็น ORD-0001 แน่ใจหรือไม่?', async () => {
-                if (!isCloudMode || !currentUser || !db) {
-                    appState.orders = [];
-                    appState.customers = [];
-                    appState.nextOrderNum = 1;
-                    refreshAllViews();
-                    showToast('ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว', 'success');
-                    return;
+            // Render dropdown
+            selectDropdown.innerHTML = `<option value="">-- ลูกค้าทั่วไป (ทุกคนค้นหาจากเลขออเดอร์ได้) --</option>` + 
+                window.appData.customers.map(cust => `<option value="${cust}">ส่งให้คุณ: ${cust}</option>`).join('');
+        }
+
+        function selectCustomerForImport(name) {
+            document.getElementById('adminTargetCustomer').value = name;
+            showModal(`เลือกส่งโค้ดให้ลูกค้า "${name}" เรียบร้อยแล้ว`);
+        }
+
+        function addNewCustomerPrompt() {
+            const name = prompt("กรอกชื่อลูกค้าใหม่:");
+            if (name && name.trim()) {
+                const trimmed = name.trim();
+                if (!window.appData.customers.includes(trimmed)) {
+                    window.appData.customers.push(trimmed);
+                    if (window.saveCustomerToCloud) window.saveCustomerToCloud(trimmed);
+                    saveToLocal();
+                    renderAdminCustomers();
                 }
-                try {
-                    const allTargets = [
-                        ...appState.orders.map(o => doc(db, 'artifacts', appId, 'public', 'data', 'orders', o.id)),
-                        ...appState.customers.map(c => doc(db, 'artifacts', appId, 'public', 'data', 'customers', c.id))
-                    ];
-                    const CHUNK_SIZE = 400;
-                    for (let i = 0; i < allTargets.length; i += CHUNK_SIZE) {
-                        const batch = writeBatch(db);
-                        allTargets.slice(i, i + CHUNK_SIZE).forEach(ref => batch.delete(ref));
-                        await batch.commit();
-                    }
-                    showToast('ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว', 'success');
-                } catch (e) {
-                    console.error('Clear all error:', e);
-                    showToast('เกิดข้อผิดพลาดในการล้างข้อมูล', 'error');
-                }
+            }
+        }
+
+        function loadSampleCode() {
+            document.getElementById('bulkCodeInput').value = 
+`RosalesWeinberg5704@hotmail.com|fhamup7558|M.C549_BAY.0.U.MsaArtifacts.-Csc9GTmfQeP0yzLRc6GWZyuZ3SQv2Xl7hmZyHcxyLQu8gPFRa8!6SJBGYYaQJAlJ6jDeqFUB0eO3dVQZnKagovyU*1DRuTV6AuBdtZlEqhsfRf0lMLerS3Z*NXBwgYoJs*MFOMjPB4fUeTUSY0DARKGvwrfw!LvVwaLrKxM0*xSEvJAOUpckD*R!qEVQm3J8UykZyWMf0IOb4I9FTZKqS0GGuCHB3JBGbBrsksUINyvq1Fl781aOEDoGC*G75nkHNsRzt*XjLXguEwGl9iYkJeLBp8swC02FVtbQbk9gF31EFhmbHWxEnYuKvaNeby6potee6vn*VEUUDmX3ESL*mXc4HYXUoKix9ttd1TmQ8Q1nzINbuOhD!IJ1*nTMHIqHTQP5gASCx37Wx7ZCACJ8dCZMCdOHm58cCYdVxYj*TohOiFZwVBZGABoADdKMW4BZUZ9dLBbz6kL8iWPe4C5xM3s$|9e5f94bc-e8a4-4e73-b8be-63364c29d753
+testmail02@hotmail.com|password123|TokenSampleXYZ999|uuid-sample-2`;
+        }
+
+        // Auto Order Number Generator
+        function generateOrderNumber() {
+            const count = window.appData.orders.length + 1;
+            return `ORD-${String(count).padStart(4, '0')}`;
+        }
+
+        function processBulkImport() {
+            const rawText = document.getElementById('bulkCodeInput').value.trim();
+            const targetCustomer = document.getElementById('adminTargetCustomer').value;
+            const importMode = document.getElementById('importMode').value;
+
+            if (!rawText) {
+                showModal("กรุณาวางโค้ดเมลในช่องก่อนบันทึก");
+                return;
+            }
+
+            const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length === 0) {
+                showModal("ไม่พบข้อมูลโค้ดที่ถูกต้อง");
+                return;
+            }
+
+            const now = new Date().toLocaleString('th-TH');
+
+            if (importMode === 'single') {
+                const newOrder = {
+                    id: generateOrderNumber(),
+                    targetCustomer: targetCustomer,
+                    codes: lines,
+                    createdAt: now
+                };
+                window.appData.orders.unshift(newOrder);
+                if (window.saveOrderToCloud) window.saveOrderToCloud(newOrder);
+            } else {
+                lines.forEach((line, index) => {
+                    const newOrder = {
+                        id: generateOrderNumber(),
+                        targetCustomer: targetCustomer,
+                        codes: [line],
+                        createdAt: now
+                    };
+                    window.appData.orders.unshift(newOrder);
+                    if (window.saveOrderToCloud) window.saveOrderToCloud(newOrder);
+                });
+            }
+
+            saveToLocal();
+            document.getElementById('bulkCodeInput').value = '';
+            refreshUI();
+            showModal(`นำเข้าและสร้างออเดอร์สำเร็จ (${lines.length} โค้ด)`);
+        }
+
+        function renderAdminOrders() {
+            const tbody = document.getElementById('adminOrdersTableBody');
+            const search = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+
+            const filtered = window.appData.orders.filter(order => {
+                return !search || 
+                    order.id.toLowerCase().includes(search) || 
+                    (order.targetCustomer && order.targetCustomer.toLowerCase().includes(search)) ||
+                    order.codes.some(c => c.toLowerCase().includes(search));
             });
-        };
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">ไม่พบรายการออเดอร์</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(order => `
+                <tr class="hover:bg-slate-50/80 transition-all">
+                    <td class="p-3 font-bold text-pink-600">
+                        <button onclick="copyText('${encodeURIComponent(order.id)}')" class="hover:underline" title="คลิกเพื่อคัดลอกเลขออเดอร์">
+                            ${order.id}
+                        </button>
+                    </td>
+                    <td class="p-3 font-medium text-slate-700">${order.targetCustomer || '<span class="text-slate-400 font-normal">ทั่วไป</span>'}</td>
+                    <td class="p-3"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-semibold">${order.codes.length} โค้ด</span></td>
+                    <td class="p-3 font-mono text-xs text-slate-500 truncate max-w-xs">${order.codes[0]}</td>
+                    <td class="p-3 text-xs text-slate-400">${order.createdAt}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteOrder('${order.id}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-all">
+                            ลบ
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteOrder(orderId) {
+            if (confirm("คุณต้องการลบออเดอร์นี้ใช่หรือไม่?")) {
+                window.appData.orders = window.appData.orders.filter(o => o.id !== orderId);
+                if (window.deleteOrderFromCloud) window.deleteOrderFromCloud(orderId);
+                saveToLocal();
+                refreshUI();
+            }
+        }
+
+        // Clipboard Helper
+        function copyText(encodedText) {
+            const text = decodeURIComponent(encodedText);
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showModal("คัดลอกข้อมูลสำเร็จเรียบร้อยแล้ว! ✨");
+            } catch (err) {
+                showModal("ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function copyEmailsOnly(encodedJson) {
+            const codes = JSON.parse(decodeURIComponent(encodedJson));
+            const emails = codes.map(c => c.split('|')[0]).filter(Boolean).join('\n');
+            copyText(encodeURIComponent(emails));
+        }
+
+        // Modal Helper
+        function showModal(msg) {
+            document.getElementById('modalMessage').textContent = msg;
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
     </script>
 </body>
 </html>
