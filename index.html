@@ -1,0 +1,1128 @@
+# <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mumu Hotmail - ระบบส่งมอบโค้ดเมลอัตโนมัติ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for code blocks */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Custom Confirmation Modal (Replaces native confirm()) -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transform transition-all">
+            <h3 id="confirmTitle" class="text-lg font-bold text-slate-900 mb-2">ยืนยันการทำรายการ</h3>
+            <p id="confirmMessage" class="text-sm text-slate-600 mb-6">คุณแน่ใจหรือไม่ที่จะดำเนินการต่อ?</p>
+            <div class="flex justify-end gap-3">
+                <button id="confirmCancelBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">ยกเลิก</button>
+                <button id="confirmOkBtn" class="px-4 py-2 rounded-xl text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shadow-indigo-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-base sm:text-lg leading-tight">Mumu Hotmail</h1>
+                    <div class="flex items-center gap-1.5">
+                        <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <p id="syncStatusText" class="text-[11px] sm:text-xs text-slate-500">กำลังเชื่อมต่อระบบออนไลน์...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode Switcher & Current Customer Indicator -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div id="loggedInUserBadge" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                    <span>👤</span>
+                    <span id="headerCustomerName"></span>
+                </div>
+                <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+                    <button id="tabCustomer" onclick="switchTab('customer')" class="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-600 shadow-sm">
+                        🔍 หน้าลูกค้า
+                    </button>
+                    <button id="tabAdmin" onclick="switchTab('admin')" class="px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">
+                        ⚙️ แอดมิน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+        <!-- ==================== CUSTOMER VIEW ==================== -->
+        <section id="customerView" class="space-y-6">
+            
+            <!-- Customer Login / Profile Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 max-w-3xl mx-auto">
+                <!-- State 1: Not Logged In -->
+                <div id="customerLoginBox" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <span>👤</span> เข้าสู่ระบบด้วยชื่อของคุณ
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">กรอกชื่อเพื่อให้แอดมินเห็นรายชื่อและส่งโค้ดตรงถึงคุณได้ทันที</p>
+                    </div>
+                    <form onsubmit="handleCustomerLogin(event)" class="flex gap-2 w-full sm:w-auto">
+                        <input type="text" id="customerLoginInput" placeholder="กรอกชื่อเล่น หรือ ชื่อของคุณ..." required
+                            class="flex-1 sm:w-52 px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition whitespace-nowrap">
+                            เข้าสู่ระบบ
+                        </button>
+                    </form>
+                </div>
+
+                <!-- State 2: Logged In -->
+                <div id="customerLoggedInBox" class="hidden space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-base" id="customerAvatarInitial">
+                                U
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-bold text-slate-900 text-base" id="customerDisplayName">ชื่อลูกค้า</h3>
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-semibold">ออนไลน์</span>
+                                </div>
+                                <p class="text-xs text-slate-500">แอดมินเห็นชื่อของคุณแล้ว และสามารถส่งโค้ดให้คุณได้โดยตรง</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="handleCustomerLogout()" class="self-start sm:self-auto px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-semibold transition">
+                            ออกจากระบบ / เปลี่ยนชื่อ
+                        </button>
+                    </div>
+
+                    <!-- My Inbox Orders -->
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5 flex items-center justify-between">
+                            <span>📬 ออเดอร์ที่ส่งถึงคุณ (<span id="myOrdersCount">0</span>)</span>
+                        </h4>
+                        <div id="myOrdersList" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Hero Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10 text-center max-w-3xl mx-auto">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold mb-4">
+                    <span>⚡</span> ระบบรับสินค้าอัตโนมัติ 24 ชั่วโมง
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">ค้นหาโค้ดเมลด้วยเลขออเดอร์</h2>
+                <p class="text-sm sm:text-base text-slate-500 mb-6">กรอกหมายเลขคำสั่งซื้อ (Order ID) ของคุณเพื่อดูและคัดลอกโค้ดเมล</p>
+
+                <form onsubmit="handleCustomerSearch(event)" class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
+                    <div class="relative flex-1">
+                        <input type="text" id="customerSearchInput" placeholder="เช่น ORD-0001 หรือ 1" 
+                            class="w-full pl-4 pr-10 py-3.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-base font-medium transition"
+                            required>
+                        <button type="button" onclick="clearCustomerSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                            ✕
+                        </button>
+                    </div>
+                    <button type="submit" class="px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm shadow-indigo-200 transition active:scale-95 whitespace-nowrap">
+                        ค้นหาโค้ด
+                    </button>
+                </form>
+
+                <!-- Quick Demo Hint -->
+                <div id="demoHint" class="mt-4 text-xs text-slate-400">
+                    ยังไม่มีข้อมูล? ลองไปที่แท็บ <button type="button" onclick="switchTab('admin')" class="text-indigo-600 underline font-medium">แอดมิน</button> เพื่อเพิ่มโค้ด หรือค้นหาตัวอย่าง <button type="button" onclick="quickSearch('ORD-0001')" class="text-indigo-600 underline font-medium">ORD-0001</button>
+                </div>
+            </div>
+
+            <!-- Search Result Container -->
+            <div id="customerResultArea" class="max-w-3xl mx-auto hidden">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- ==================== ADMIN VIEW ==================== -->
+        <section id="adminView" class="hidden space-y-6">
+            <!-- Stats Row -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500">ลูกค้าในระบบ</p>
+                    <p id="statTotalCustomers" class="text-2xl font-bold text-emerald-600 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500">ออเดอร์ทั้งหมด</p>
+                    <p id="statTotalOrders" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500">จำนวนโค้ดทั้งหมด</p>
+                    <p id="statTotalCodes" class="text-2xl font-bold text-indigo-600 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500">เลขออเดอร์ถัดไป</p>
+                    <p id="statNextOrder" class="text-2xl font-bold text-slate-800 mt-1">ORD-0001</p>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
+                    <p class="text-xs font-medium text-slate-500">จัดการข้อมูล</p>
+                    <button onclick="confirmClearAll()" class="mt-1 text-left text-xs font-semibold text-rose-600 hover:text-rose-700 underline">
+                        ล้างข้อมูลทั้งหมด
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registered Customers Directory Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">👥 รายชื่อลูกค้าที่เข้าสู่ระบบ</h3>
+                        <p class="text-xs text-slate-500">คลิกที่ชื่อลูกค้าเพื่อเลือกส่งโค้ดให้ลูกค้ารายนั้นทันที</p>
+                    </div>
+                    <button type="button" onclick="openAddCustomerPrompt()" class="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold transition">
+                        + เพิ่มรายชื่อลูกค้าเอง
+                    </button>
+                </div>
+                <div id="adminCustomerChips" class="flex flex-wrap gap-2">
+                    <!-- Populated by JS -->
+                </div>
+                <!-- Inline Quick Add Customer Input (Hidden by default) -->
+                <div id="inlineAddCustomerBox" class="hidden mt-3 pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2 max-w-md">
+                    <input type="text" id="newCustomerNameAdminInput" placeholder="พิมพ์ชื่อลูกค้าใหม่..." class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <div class="flex gap-2">
+                        <button type="button" onclick="confirmAddCustomerFromAdmin()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold">เพิ่มชื่อ</button>
+                        <button type="button" onclick="closeAddCustomerPrompt()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold">ยกเลิก</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Import Card -->
+            <div id="bulkImportSection" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">📥 นำเข้าและส่งโค้ดจำนวนมาก (Bulk Import)</h3>
+                        <p class="text-xs sm:text-sm text-slate-500">วางโค้ดเมลลงในช่องด้านล่าง (1 บรรทัด = 1 โค้ด) และเลือกชื่อลูกค้าที่ต้องการส่งให้</p>
+                    </div>
+                    <button type="button" onclick="insertSampleCode()" class="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+                        + ใส่โค้ดตัวอย่าง
+                    </button>
+                </div>
+
+                <!-- Target Customer Selector -->
+                <div class="mb-4 p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <label for="targetCustomerSelect" class="text-xs font-bold text-indigo-900 whitespace-nowrap flex items-center gap-1.5">
+                        <span>🎯</span> ส่งโค้ดให้ลูกค้า:
+                    </label>
+                    <select id="targetCustomerSelect" class="flex-1 px-3.5 py-2 rounded-xl border border-indigo-200 text-sm font-semibold text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="">-- ไม่ระบุชื่อลูกค้า (รับผ่านเลขออเดอร์เท่านั้น) --</option>
+                    </select>
+                </div>
+
+                <textarea id="bulkCodeInput" rows="6" 
+                    placeholder="วางโค้ดที่นี่ (บรรทัดละ 1 โค้ด)...&#10;ตัวอย่าง: RosalesWeinberg5704@hotmail.com|fhamup7558|M.C549_BAY.0.U.MsaArtifacts...|9e5f94bc-e8a4-4e73-b8be-63364c29d753"
+                    class="w-full p-4 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-mono text-xs sm:text-sm custom-scrollbar bg-slate-50"></textarea>
+
+                <div class="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    <!-- Grouping Mode -->
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <label class="text-xs font-semibold text-slate-700">รูปแบบการสร้างออเดอร์:</label>
+                        <select id="importMode" class="px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="single_order">รวมทั้งหมดเป็น 1 ออเดอร์ (รันเลขออเดอร์เดียว)</option>
+                            <option value="one_per_code">แยก 1 โค้ด = 1 ออเดอร์ (รันเลขออเดอร์เรียงลงมา)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <span id="lineCountPreview" class="text-xs font-medium text-slate-500">0 บรรทัด</span>
+                        <button id="bulkSubmitBtn" onclick="processBulkImport()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm shadow-indigo-200 transition active:scale-95">
+                            บันทึกและส่งโค้ด
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders List Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">📋 รายการออเดอร์ทั้งหมด</h3>
+                        <p class="text-xs text-slate-500">คลิกที่เลขออเดอร์เพื่อคัดลอก หรือตรวจสอบรายชื่อผู้รับ</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="adminSearchInput" oninput="renderAdminTable()" placeholder="กรองเลขออเดอร์, ชื่อลูกค้า, อีเมล..." 
+                            class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-64">
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3.5 px-4 font-semibold">เลขออเดอร์</th>
+                                <th class="py-3.5 px-4 font-semibold">ลูกค้าผู้รับ</th>
+                                <th class="py-3.5 px-4 font-semibold">จำนวนโค้ด</th>
+                                <th class="py-3.5 px-4 font-semibold">ตัวอย่างข้อมูล</th>
+                                <th class="py-3.5 px-4 font-semibold">วันที่สร้าง</th>
+                                <th class="py-3.5 px-4 font-semibold text-right">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="adminPagination" class="p-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==================== CLOUD DATABASE SETUP ====================
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mumu-hotmail-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+
+        const SAMPLE_CODE = 'RosalesWeinberg5704@hotmail.com|fhamup7558|M.C549_BAY.0.U.MsaArtifacts.-Csc9GTmfQeP0yzLRc6GWZyuZ3SQv2Xl7hmZyHcxyLQu8gPFRa8!6SJBGYYaQJAlJ6jDeqFUB0eO3dVQZnKagovyU*1DRuTV6AuBdtZlEqhsfRf0lMLerS3Z*NXBwgYoJs*MFOMjPB4fUeTUSY0DARKGvwrfw!LvVwaLrKxM0*xSEvJAOUpckD*R!qEVQm3J8UykZyWMf0IOb4I9FTZKqS0GGuCHB3JBGbBrsksUINyvq1Fl781aOEDoGC*G75nkHNsRzt*XjLXguEwGl9iYkJeLBp8swC02FVtbQbk9gF31EFhmbHWxEnYuKvaNeby6potee6vn*VEUUDmX3ESL*mXc4HYXUoKix9ttd1TmQ8Q1nzINbuOhD!IJ1*nTMHIqHTQP5gASCx37Wx7ZCACJ8dCZMCdOHm58cCYdVxYj*TohOiFZwVBZGABoADdKMW4BZUZ9dLBbz6kL8iWPe4C5xM3s$|9e5f94bc-e8a4-4e73-b8be-63364c29d753';
+
+        let appState = {
+            nextOrderNum: 1,
+            customers: [], // { id, name, joinedAt }
+            orders: []     // { id: 'ORD-0001', num: 1, customerName: '', codes: ['...'], createdAt }
+        };
+
+        let currentCustomerName = '';
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 20;
+        let isInitialOrdersLoaded = false;
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('bulkCodeInput').addEventListener('input', updateLineCount);
+            await initCloudSync();
+        });
+
+        async function initCloudSync() {
+            const statusDot = document.getElementById('syncStatusDot');
+            const statusText = document.getElementById('syncStatusText');
+
+            if (!firebaseConfig) {
+                statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
+                statusText.textContent = 'ไม่พบการตั้งค่าฐานข้อมูลออนไลน์';
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                currentUser = auth.currentUser;
+                if (!currentUser) return;
+
+                statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+                statusText.textContent = 'เชื่อมต่อออนไลน์แล้ว (ซิงก์ทุกเครื่องอัตโนมัติ)';
+
+                startRealtimeListeners();
+            } catch (err) {
+                console.error('Cloud init error:', err);
+                statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
+                statusText.textContent = 'เชื่อมต่อออนไลน์ไม่สำเร็จ';
+                showToast('ไม่สามารถเชื่อมต่อฐานข้อมูลออนไลน์ได้', 'error');
+            }
+        }
+
+        function startRealtimeListeners() {
+            if (!currentUser || !db) return;
+
+            const ordersCol = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
+            const customersCol = collection(db, 'artifacts', appId, 'public', 'data', 'customers');
+
+            // 1. Listen to Orders in Real-time
+            onSnapshot(ordersCol, async (snapshot) => {
+                const fetchedOrders = [];
+                let maxNum = 0;
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data && data.id) {
+                        fetchedOrders.push({
+                            id: data.id,
+                            num: Number(data.num) || 0,
+                            customerName: data.customerName || '',
+                            codes: Array.isArray(data.codes) ? data.codes : [],
+                            createdAt: data.createdAt || new Date().toISOString()
+                        });
+                        if (Number(data.num) > maxNum) {
+                            maxNum = Number(data.num);
+                        }
+                    }
+                });
+
+                // Sort newest first in memory
+                fetchedOrders.sort((a, b) => b.num - a.num);
+                appState.orders = fetchedOrders;
+                appState.nextOrderNum = maxNum + 1;
+
+                // Seed 1 sample order if completely empty on very first load
+                if (!isInitialOrdersLoaded) {
+                    isInitialOrdersLoaded = true;
+                    if (fetchedOrders.length === 0) {
+                        await createOrderCloud([SAMPLE_CODE], '', 1);
+                        return;
+                    }
+                }
+
+                updateCustomerUI();
+                updateAdminCustomerUI();
+                updateAdminStats();
+                renderAdminTable();
+
+                // Auto-refresh currently displayed search result if open
+                const currentSearchVal = document.getElementById('customerSearchInput').value.trim();
+                const resultArea = document.getElementById('customerResultArea');
+                if (currentSearchVal && !resultArea.classList.contains('hidden')) {
+                    performCustomerSearch(currentSearchVal);
+                }
+            }, (error) => {
+                console.error('Orders snapshot error:', error);
+                showToast('เกิดข้อผิดพลาดในการซิงก์รายการออเดอร์', 'error');
+            });
+
+            // 2. Listen to Customers in Real-time
+            onSnapshot(customersCol, (snapshot) => {
+                const fetchedCustomers = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data && data.name) {
+                        fetchedCustomers.push({
+                            id: docSnap.id,
+                            name: data.name,
+                            joinedAt: data.joinedAt || new Date().toISOString()
+                        });
+                    }
+                });
+
+                fetchedCustomers.sort((a, b) => new Date(b.joinedAt) - new Date(a.joinedAt));
+                appState.customers = fetchedCustomers;
+
+                updateAdminCustomerUI();
+                updateAdminStats();
+            }, (error) => {
+                console.error('Customers snapshot error:', error);
+            });
+        }
+
+        function sanitizeDocId(name) {
+            return encodeURIComponent(name.trim().toLowerCase()).replace(/\./g, '%2E');
+        }
+
+        async function registerCustomerIfNew(name) {
+            if (!currentUser || !db) return;
+            const cleanName = name.trim();
+            if (!cleanName) return;
+
+            const exists = appState.customers.some(c => c.name.toLowerCase() === cleanName.toLowerCase());
+            if (!exists) {
+                try {
+                    const docId = sanitizeDocId(cleanName);
+                    const customerDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'customers', docId);
+                    await setDoc(customerDocRef, {
+                        name: cleanName,
+                        joinedAt: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.error('Error registering customer:', e);
+                }
+            }
+        }
+
+        // ==================== CUSTOMER AUTH & MY ORDERS ====================
+        window.handleCustomerLogin = async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('customerLoginInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            currentCustomerName = name;
+            input.value = '';
+            updateCustomerUI();
+            await registerCustomerIfNew(name);
+            showToast(`เข้าสู่ระบบในชื่อ "${name}" สำเร็จ!`, 'success');
+        };
+
+        window.handleCustomerLogout = function() {
+            currentCustomerName = '';
+            updateCustomerUI();
+            showToast('ออกจากระบบเรียบร้อยแล้ว', 'success');
+        };
+
+        function updateCustomerUI() {
+            const loginBox = document.getElementById('customerLoginBox');
+            const loggedInBox = document.getElementById('customerLoggedInBox');
+            const headerBadge = document.getElementById('loggedInUserBadge');
+            const headerName = document.getElementById('headerCustomerName');
+
+            if (!currentCustomerName) {
+                loginBox.classList.remove('hidden');
+                loggedInBox.classList.add('hidden');
+                headerBadge.classList.add('hidden');
+                headerBadge.classList.remove('sm:flex');
+                return;
+            }
+
+            loginBox.classList.add('hidden');
+            loggedInBox.classList.remove('hidden');
+            headerBadge.classList.remove('hidden');
+            headerBadge.classList.add('sm:flex');
+            headerName.textContent = currentCustomerName;
+
+            document.getElementById('customerDisplayName').textContent = currentCustomerName;
+            document.getElementById('customerAvatarInitial').textContent = currentCustomerName.charAt(0).toUpperCase();
+
+            // Render orders belonging to this customer
+            const myOrders = appState.orders.filter(
+                o => o.customerName && o.customerName.toLowerCase() === currentCustomerName.toLowerCase()
+            );
+
+            document.getElementById('myOrdersCount').textContent = myOrders.length;
+            const myOrdersList = document.getElementById('myOrdersList');
+
+            if (myOrders.length === 0) {
+                myOrdersList.innerHTML = `
+                    <div class="col-span-full p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                        ยังไม่มีออเดอร์ที่ส่งตรงถึงชื่อ "${escapeHtml(currentCustomerName)}" ในขณะนี้
+                    </div>
+                `;
+                return;
+            }
+
+            myOrdersList.innerHTML = myOrders.map(order => {
+                const dateStr = new Date(order.createdAt).toLocaleString('th-TH', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                return `
+                    <button type="button" onclick="quickSearch('${escapeHtml(order.id)}')" class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-indigo-50 hover:border-indigo-300 transition text-left group">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs text-indigo-700 group-hover:underline">${escapeHtml(order.id)}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 font-semibold text-[11px]">${order.codes.length} โค้ด</span>
+                            </div>
+                            <span class="text-[11px] text-slate-400 block mt-0.5">${dateStr}</span>
+                        </div>
+                        <span class="text-xs font-semibold text-indigo-600">เปิดดู →</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // ==================== UTILITIES ====================
+        function formatOrderId(num) {
+            return 'ORD-' + String(num).padStart(4, '0');
+        }
+
+        async function createOrderCloud(codesArray, customerName = '', explicitNum = null) {
+            if (!currentUser || !db) return null;
+            const num = explicitNum !== null ? explicitNum : appState.nextOrderNum;
+            const id = formatOrderId(num);
+            const order = {
+                id: id,
+                num: num,
+                customerName: customerName ? customerName.trim() : '',
+                codes: codesArray,
+                createdAt: new Date().toISOString()
+            };
+            const orderDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', id);
+            await setDoc(orderDocRef, order);
+            return order;
+        }
+
+        // Clipboard copy using document.execCommand('copy') for iFrame compatibility
+        window.copyToClipboard = function(text, label = 'โค้ด') {
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textarea);
+                if (successful) {
+                    showToast(`คัดลอก${label}เรียบร้อยแล้ว!`, 'success');
+                } else {
+                    showToast('ไม่สามารถคัดลอกได้ กรุณากด Ctrl+C', 'error');
+                }
+            } catch (err) {
+                showToast('เกิดข้อผิดพลาดในการคัดลอก', 'error');
+            }
+        };
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-slate-900 text-white' : 'bg-rose-600 text-white';
+            toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✅' : '⚠️'}</span>
+                <span>${escapeHtml(message)}</span>
+            `;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Custom Confirm Dialog
+        function showConfirm(title, message, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const okBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+
+            const cleanup = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                okBtn.onclick = null;
+                cancelBtn.onclick = null;
+            };
+
+            cancelBtn.onclick = cleanup;
+            okBtn.onclick = () => {
+                cleanup();
+                onConfirm();
+            };
+        }
+
+        // ==================== TAB SWITCHING ====================
+        window.switchTab = function(tab) {
+            const customerView = document.getElementById('customerView');
+            const adminView = document.getElementById('adminView');
+            const tabCustomer = document.getElementById('tabCustomer');
+            const tabAdmin = document.getElementById('tabAdmin');
+
+            if (tab === 'customer') {
+                customerView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+                tabCustomer.className = 'px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-600 shadow-sm';
+                tabAdmin.className = 'px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900';
+                updateCustomerUI();
+            } else {
+                customerView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                tabAdmin.className = 'px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-600 shadow-sm';
+                tabCustomer.className = 'px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900';
+                updateAdminCustomerUI();
+                updateAdminStats();
+                renderAdminTable();
+            }
+        };
+
+        // ==================== CUSTOMER SEARCH & DISPLAY ====================
+        window.quickSearch = function(orderId) {
+            document.getElementById('customerSearchInput').value = orderId;
+            performCustomerSearch(orderId);
+        };
+
+        window.clearCustomerSearch = function() {
+            document.getElementById('customerSearchInput').value = '';
+            document.getElementById('customerResultArea').classList.add('hidden');
+            document.getElementById('customerSearchInput').focus();
+        };
+
+        window.handleCustomerSearch = function(e) {
+            e.preventDefault();
+            const query = document.getElementById('customerSearchInput').value.trim();
+            if (query) {
+                performCustomerSearch(query);
+            }
+        };
+
+        function performCustomerSearch(query) {
+            const resultArea = document.getElementById('customerResultArea');
+            const normalizedQuery = query.toUpperCase().trim();
+
+            const order = appState.orders.find(o => {
+                if (o.id.toUpperCase() === normalizedQuery) return true;
+                if (/^\d+$/.test(normalizedQuery) && o.num === parseInt(normalizedQuery, 10)) return true;
+                return false;
+            });
+
+            resultArea.classList.remove('hidden');
+
+            if (!order) {
+                resultArea.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-rose-200 p-8 text-center shadow-sm">
+                        <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-3 text-xl">❌</div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-1">ไม่พบเลขออเดอร์ "${escapeHtml(query)}"</h3>
+                        <p class="text-sm text-slate-500">กรุณาตรวจสอบหมายเลขคำสั่งซื้ออีกครั้ง หรือติดต่อแอดมิน</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const dateStr = new Date(order.createdAt).toLocaleString('th-TH', {
+                year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            let html = `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5 sm:p-6 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-sm">${escapeHtml(order.id)}</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 font-semibold text-xs">จำนวน ${order.codes.length} โค้ด</span>
+                                ${order.customerName ? `<span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-semibold text-xs">👤 ลูกค้า: ${escapeHtml(order.customerName)}</span>` : ''}
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1.5">วันที่ทำรายการ: ${dateStr}</p>
+                        </div>
+                        <button onclick="copyAllFromOrder('${escapeHtml(order.id)}')" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition active:scale-95 flex items-center justify-center gap-2">
+                            <span>📋</span> คัดลอกทั้งหมด (${order.codes.length})
+                        </button>
+                    </div>
+                    <div class="divide-y divide-slate-100 max-h-[65vh] overflow-y-auto custom-scrollbar">
+            `;
+
+            order.codes.forEach((code, idx) => {
+                const parts = code.split('|');
+                const hasEmailPass = parts.length >= 2 && parts[0].includes('@');
+                const email = hasEmailPass ? parts[0] : '';
+                const pass = hasEmailPass ? parts[1] : '';
+
+                html += `
+                    <div class="p-4 sm:p-5 hover:bg-slate-50/70 transition space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                ${hasEmailPass ? `
+                                    <button onclick="copySinglePart('${escapeHtml(order.id)}', ${idx}, 'email')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 text-xs font-semibold transition">
+                                        คัดลอก Email
+                                    </button>
+                                    <button onclick="copySinglePart('${escapeHtml(order.id)}', ${idx}, 'pass')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 text-xs font-semibold transition">
+                                        คัดลอก Pass
+                                    </button>
+                                ` : ''}
+                                <button onclick="copySingleCode('${escapeHtml(order.id)}', ${idx})" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition active:scale-95">
+                                    คัดลอกโค้ดเต็ม
+                                </button>
+                            </div>
+                        </div>
+
+                        ${hasEmailPass ? `
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div class="px-3 py-2 rounded-lg bg-slate-100/80 border border-slate-200/70 truncate">
+                                    <span class="text-slate-400 mr-1">Email:</span>
+                                    <span class="font-mono font-semibold text-slate-800">${escapeHtml(email)}</span>
+                                </div>
+                                <div class="px-3 py-2 rounded-lg bg-slate-100/80 border border-slate-200/70 truncate">
+                                    <span class="text-slate-400 mr-1">Pass:</span>
+                                    <span class="font-mono font-semibold text-slate-800">${escapeHtml(pass)}</span>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="p-3 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs break-all select-all leading-relaxed">
+                            ${escapeHtml(code)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            resultArea.innerHTML = html;
+        }
+
+        window.copyAllFromOrder = function(orderId) {
+            const order = appState.orders.find(o => o.id === orderId);
+            if (!order) return;
+            copyToClipboard(order.codes.join('\n'), `ทั้งหมด ${order.codes.length} โค้ด`);
+        };
+
+        window.copySingleCode = function(orderId, index) {
+            const order = appState.orders.find(o => o.id === orderId);
+            if (!order || !order.codes[index]) return;
+            copyToClipboard(order.codes[index], `โค้ดที่ #${index + 1}`);
+        };
+
+        window.copySinglePart = function(orderId, index, partType) {
+            const order = appState.orders.find(o => o.id === orderId);
+            if (!order || !order.codes[index]) return;
+            const parts = order.codes[index].split('|');
+            if (partType === 'email' && parts[0]) {
+                copyToClipboard(parts[0], ' Email ');
+            } else if (partType === 'pass' && parts[1]) {
+                copyToClipboard(parts[1], ' Password ');
+            }
+        };
+
+        // ==================== ADMIN CUSTOMER DIRECTORY & BULK IMPORT ====================
+        function updateAdminCustomerUI() {
+            const chipsContainer = document.getElementById('adminCustomerChips');
+            const selectEl = document.getElementById('targetCustomerSelect');
+            const previousSelected = selectEl.value;
+
+            let optionsHtml = `<option value="">-- ไม่ระบุชื่อลูกค้า (รับผ่านเลขออเดอร์เท่านั้น) --</option>`;
+            appState.customers.forEach(c => {
+                const selectedAttr = c.name === previousSelected ? 'selected' : '';
+                optionsHtml += `<option value="${escapeHtml(c.name)}" ${selectedAttr}>👤 ${escapeHtml(c.name)}</option>`;
+            });
+            selectEl.innerHTML = optionsHtml;
+
+            if (appState.customers.length === 0) {
+                chipsContainer.innerHTML = `<p class="text-xs text-slate-400">ยังไม่มีลูกค้าเข้าสู่ระบบ (เมื่อลูกค้ากรอกชื่อเข้าสู่ระบบในหน้าลูกค้า ชื่อจะปรากฏที่นี่อัตโนมัติ)</p>`;
+                return;
+            }
+
+            chipsContainer.innerHTML = appState.customers.map(c => {
+                const orderCount = appState.orders.filter(o => o.customerName && o.customerName.toLowerCase() === c.name.toLowerCase()).length;
+                return `
+                    <div class="inline-flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:border-indigo-300 transition">
+                        <button type="button" onclick="selectCustomerForSending('${escapeHtml(c.name).replace(/'/g, "\\'")}')" class="flex items-center gap-1.5 text-xs font-semibold text-slate-800 hover:text-indigo-600" title="คลิกเพื่อเลือกส่งโค้ดให้ลูกค้าคนนี้">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>${escapeHtml(c.name)}</span>
+                            <span class="text-[11px] text-slate-400">(${orderCount} ออเดอร์)</span>
+                        </button>
+                        <button type="button" onclick="removeCustomerFromAdmin('${escapeHtml(c.name).replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-rose-600 px-1 text-xs" title="ลบรายชื่อ">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.selectCustomerForSending = function(customerName) {
+            const selectEl = document.getElementById('targetCustomerSelect');
+            selectEl.value = customerName;
+            document.getElementById('bulkImportSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('bulkCodeInput').focus();
+            showToast(`เลือกลูกค้า "${customerName}" สำหรับส่งโค้ดแล้ว`, 'success');
+        };
+
+        window.openAddCustomerPrompt = function() {
+            document.getElementById('inlineAddCustomerBox').classList.remove('hidden');
+            document.getElementById('newCustomerNameAdminInput').focus();
+        };
+
+        window.closeAddCustomerPrompt = function() {
+            document.getElementById('inlineAddCustomerBox').classList.add('hidden');
+            document.getElementById('newCustomerNameAdminInput').value = '';
+        };
+
+        window.confirmAddCustomerFromAdmin = async function() {
+            const input = document.getElementById('newCustomerNameAdminInput');
+            const name = input.value.trim();
+            if (!name) {
+                showToast('กรุณากรอกชื่อลูกค้า', 'error');
+                return;
+            }
+            await registerCustomerIfNew(name);
+            closeAddCustomerPrompt();
+            setTimeout(() => {
+                document.getElementById('targetCustomerSelect').value = name;
+            }, 300);
+            showToast(`เพิ่มลูกค้า "${name}" เรียบร้อยแล้ว`, 'success');
+        };
+
+        window.removeCustomerFromAdmin = function(customerName) {
+            showConfirm('ลบรายชื่อลูกค้า', `ต้องการลบรายชื่อ "${customerName}" ออกจากรายการลูกค้าใช่หรือไม่? (ออเดอร์เดิมจะยังคงอยู่)`, async () => {
+                if (!currentUser || !db) return;
+                try {
+                    const docId = sanitizeDocId(customerName);
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'customers', docId));
+                    showToast(`ลบรายชื่อ "${customerName}" แล้ว`, 'success');
+                } catch (e) {
+                    console.error('Remove customer error:', e);
+                    showToast('เกิดข้อผิดพลาดในการลบรายชื่อ', 'error');
+                }
+            });
+        };
+
+        window.insertSampleCode = function() {
+            const textarea = document.getElementById('bulkCodeInput');
+            const current = textarea.value.trim();
+            textarea.value = current ? current + '\n' + SAMPLE_CODE : SAMPLE_CODE;
+            updateLineCount();
+        };
+
+        function updateLineCount() {
+            const text = document.getElementById('bulkCodeInput').value;
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            document.getElementById('lineCountPreview').textContent = `${lines.length.toLocaleString()} บรรทัด`;
+        }
+
+        window.processBulkImport = async function() {
+            if (!currentUser || !db) {
+                showToast('กำลังเชื่อมต่อระบบออนไลน์ กรุณารอสักครู่', 'error');
+                return;
+            }
+
+            const textarea = document.getElementById('bulkCodeInput');
+            const lines = textarea.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+            if (lines.length === 0) {
+                showToast('กรุณาวางโค้ดอย่างน้อย 1 บรรทัด', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('bulkSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'กำลังบันทึก...';
+
+            try {
+                const mode = document.getElementById('importMode').value;
+                const targetCustomer = document.getElementById('targetCustomerSelect').value;
+                let createdCount = 0;
+                let firstId = '';
+                let lastId = '';
+                let startingNum = appState.nextOrderNum;
+
+                if (mode === 'single_order') {
+                    const order = await createOrderCloud(lines, targetCustomer, startingNum);
+                    createdCount = 1;
+                    firstId = order.id;
+                } else {
+                    // Use Firestore writeBatch in chunks of 400 for fast bulk creation
+                    const CHUNK_SIZE = 400;
+                    for (let i = 0; i < lines.length; i += CHUNK_SIZE) {
+                        const batch = writeBatch(db);
+                        const chunk = lines.slice(i, i + CHUNK_SIZE);
+                        chunk.forEach((line, idxInChunk) => {
+                            const orderNum = startingNum + i + idxInChunk;
+                            const id = formatOrderId(orderNum);
+                            if (i === 0 && idxInChunk === 0) firstId = id;
+                            lastId = id;
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', id);
+                            batch.set(docRef, {
+                                id: id,
+                                num: orderNum,
+                                customerName: targetCustomer ? targetCustomer.trim() : '',
+                                codes: [line],
+                                createdAt: new Date().toISOString()
+                            });
+                        });
+                        await batch.commit();
+                    }
+                    createdCount = lines.length;
+                }
+
+                textarea.value = '';
+                updateLineCount();
+                currentPage = 1;
+
+                const recipientText = targetCustomer ? ` ให้ลูกค้า "${targetCustomer}"` : '';
+                if (createdCount === 1) {
+                    showToast(`ส่งออเดอร์ ${firstId} (${lines.length} โค้ด)${recipientText} สำเร็จ!`, 'success');
+                } else {
+                    showToast(`สร้าง ${createdCount.toLocaleString()} ออเดอร์ (${firstId} ถึง ${lastId})${recipientText} สำเร็จ!`, 'success');
+                }
+            } catch (err) {
+                console.error('Bulk import error:', err);
+                showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูลออนไลน์', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'บันทึกและส่งโค้ด';
+            }
+        };
+
+        function updateAdminStats() {
+            const totalOrders = appState.orders.length;
+            const totalCodes = appState.orders.reduce((sum, o) => sum + o.codes.length, 0);
+            document.getElementById('statTotalCustomers').textContent = appState.customers.length.toLocaleString();
+            document.getElementById('statTotalOrders').textContent = totalOrders.toLocaleString();
+            document.getElementById('statTotalCodes').textContent = totalCodes.toLocaleString();
+            document.getElementById('statNextOrder').textContent = formatOrderId(appState.nextOrderNum);
+        }
+
+        window.renderAdminTable = function() {
+            const tbody = document.getElementById('adminTableBody');
+            const pagination = document.getElementById('adminPagination');
+            const searchQuery = document.getElementById('adminSearchInput').value.trim().toLowerCase();
+
+            const filtered = searchQuery
+                ? appState.orders.filter(o =>
+                    o.id.toLowerCase().includes(searchQuery) ||
+                    (o.customerName && o.customerName.toLowerCase().includes(searchQuery)) ||
+                    o.codes.some(c => c.toLowerCase().includes(searchQuery))
+                  )
+                : appState.orders;
+
+            const totalItems = filtered.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+            const pageItems = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-10 text-center text-slate-400 text-sm">
+                            ไม่พบรายการออเดอร์
+                        </td>
+                    </tr>
+                `;
+                pagination.innerHTML = '<span>แสดง 0 รายการ</span>';
+                return;
+            }
+
+            tbody.innerHTML = pageItems.map(order => {
+                const dateStr = new Date(order.createdAt).toLocaleString('th-TH', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                const preview = order.codes[0] ? order.codes[0].substring(0, 36) + (order.codes[0].length > 36 ? '...' : '') : '';
+                const customerBadge = order.customerName
+                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-semibold text-xs">👤 ${escapeHtml(order.customerName)}</span>`
+                    : `<span class="text-xs text-slate-400">- ไม่ระบุ -</span>`;
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 whitespace-nowrap">
+                            <button onclick="copyToClipboard('${escapeHtml(order.id)}', 'เลขออเดอร์')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition" title="คลิกเพื่อคัดลอกเลขออเดอร์">
+                                ${escapeHtml(order.id)}
+                            </button>
+                        </td>
+                        <td class="py-3.5 px-4 whitespace-nowrap">
+                            ${customerBadge}
+                        </td>
+                        <td class="py-3.5 px-4 whitespace-nowrap">
+                            <span class="font-semibold text-slate-700">${order.codes.length.toLocaleString()}</span> โค้ด
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-xs text-slate-500 max-w-xs truncate">
+                            ${escapeHtml(preview)}
+                        </td>
+                        <td class="py-3.5 px-4 whitespace-nowrap text-xs text-slate-500">
+                            ${dateStr}
+                        </td>
+                        <td class="py-3.5 px-4 whitespace-nowrap text-right space-x-2">
+                            <button onclick="viewOrderAsCustomer('${escapeHtml(order.id)}')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">ดูโค้ด</button>
+                            <button onclick="deleteOrder('${escapeHtml(order.id)}')" class="text-xs font-semibold text-rose-600 hover:text-rose-800">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            pagination.innerHTML = `
+                <span>แสดง ${startIdx + 1}-${Math.min(startIdx + ITEMS_PER_PAGE, totalItems)} จาก ${totalItems.toLocaleString()} ออเดอร์</span>
+                <div class="flex items-center gap-2">
+                    <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 font-medium">ก่อนหน้า</button>
+                    <span class="font-semibold text-slate-700">หน้า ${currentPage} / ${totalPages}</span>
+                    <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 disabled:opacity-40 font-medium">ถัดไป</button>
+                </div>
+            `;
+        };
+
+        window.changePage = function(page) {
+            currentPage = page;
+            renderAdminTable();
+        };
+
+        window.viewOrderAsCustomer = function(orderId) {
+            switchTab('customer');
+            quickSearch(orderId);
+        };
+
+        window.deleteOrder = function(orderId) {
+            showConfirm('ลบออเดอร์', `ต้องการลบออเดอร์ ${orderId} ใช่หรือไม่?`, async () => {
+                if (!currentUser || !db) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId));
+                    showToast(`ลบออเดอร์ ${orderId} แล้ว`, 'success');
+                } catch (e) {
+                    console.error('Delete order error:', e);
+                    showToast('ไม่สามารถลบออเดอร์ได้', 'error');
+                }
+            });
+        };
+
+        window.confirmClearAll = function() {
+            showConfirm('ล้างข้อมูลทั้งหมด', 'ข้อมูลลูกค้า ออเดอร์ และโค้ดทั้งหมดบนระบบออนไลน์จะถูกลบ และเลขออเดอร์จะรีเซ็ตกลับเป็น ORD-0001 แน่ใจหรือไม่?', async () => {
+                if (!currentUser || !db) return;
+                try {
+                    const allTargets = [
+                        ...appState.orders.map(o => doc(db, 'artifacts', appId, 'public', 'data', 'orders', o.id)),
+                        ...appState.customers.map(c => doc(db, 'artifacts', appId, 'public', 'data', 'customers', c.id))
+                    ];
+                    const CHUNK_SIZE = 400;
+                    for (let i = 0; i < allTargets.length; i += CHUNK_SIZE) {
+                        const batch = writeBatch(db);
+                        allTargets.slice(i, i + CHUNK_SIZE).forEach(ref => batch.delete(ref));
+                        await batch.commit();
+                    }
+                    showToast('ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว', 'success');
+                } catch (e) {
+                    console.error('Clear all error:', e);
+                    showToast('เกิดข้อผิดพลาดในการล้างข้อมูล', 'error');
+                }
+            });
+        };
+    </script>
+</body>
+</html>
