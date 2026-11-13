@@ -432,7 +432,7 @@
             }
         }
 
-        function renderCustomerOrders() {
+                function renderCustomerOrders() {
             const container = document.getElementById('customerOrdersList');
             const searchInputEl = document.getElementById('customerSearchInput');
             const search = searchInputEl ? searchInputEl.value.toLowerCase().trim() : '';
@@ -441,12 +441,23 @@
             const filtered = window.appData.orders.filter(order => {
                 const orderCust = (order.targetCustomer || '').toLowerCase();
                 
-                // 1. ตรวจสอบสิทธิ์: ต้องเป็นออเดอร์ของลูกค้าคนนี้โดยตรง หรือเป็นออเดอร์ทั่วไป (ไม่มีชื่อผู้รับ)
-                const isForMe = !currentCust || orderCust === currentCust || !order.targetCustomer;
-                if (!isForMe) return false; // ถ้าไม่ใช่ของลูกค้าคนนี้ ตัดทิ้งทันทีไม่ให้แสดงผล
+                // เงื่อนไขสิทธิ์การมองเห็นออเดอร์:
+                // - ถ้ายังไม่ล็อกอิน (currentCust เป็นค่าว่าง): ให้เห็นเฉพาะออเดอร์ทั่วไปที่ไม่มีการระบุชื่อผู้รับ
+                // - ถ้าล็อกอินแล้ว: ให้เห็นออเดอร์ของตัวเอง หรือออเดอร์ทั่วไป
+                let isForMe = false;
+                if (!currentCust) {
+                    isForMe = !order.targetCustomer; // ถ้ายังไม่ใส่ชื่อ ให้เห็นแค่ออเดอร์ทั่วไป
+                } else {
+                    isForMe = (orderCust === currentCust) || !order.targetCustomer; // ถ้าใส่ชื่อแล้ว เห็นของตัวเอง + ทั่วไป
+                }
 
-                // 2. ตรวจสอบคำค้นหาเฉพาะในขอบเขตออเดอร์ของตัวเอง
-                const matchSearch = !search || order.id.toLowerCase().includes(search) || order.codes.some(c => c.toLowerCase().includes(search));
+                if (!isForMe) return false;
+
+                // ตรวจสอบคำค้นหา
+                const matchSearch = !search || 
+                    order.id.toLowerCase().includes(search) || 
+                    order.codes.some(c => c.toLowerCase().includes(search)) ||
+                    (order.targetCustomer && order.targetCustomer.toLowerCase().includes(search));
                 
                 return matchSearch;
             });
@@ -454,8 +465,8 @@
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-2">
-                        <p class="text-slate-400 font-medium">ยังไม่มีออเดอร์โค้ดที่ส่งถึงคุณในขณะนี้</p>
-                        <p class="text-xs text-slate-400">กรุณาตรวจสอบชื่อที่ใช้เข้าสู่ระบบหรือคำค้นหาของคุณอีกครั้ง</p>
+                        <p class="text-slate-400 font-medium">ยังไม่มีออเดอร์โค้ดที่ตรงกับการค้นหา</p>
+                        <p class="text-xs text-slate-400">${!currentCust ? '💡 คำแนะนำ: หากแอดมินส่งออเดอร์แบบระบุชื่อ ให้กรอกชื่อของคุณด้านบนเพื่อเข้าสู่ระบบก่อนค้นหา' : 'กรุณาตรวจสอบเลขออเดอร์หรือชื่อให้ถูกต้องอีกครั้ง'}</p>
                     </div>
                 `;
                 return;
